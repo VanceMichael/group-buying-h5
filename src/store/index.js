@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { mockProducts, mockGroups, mockMyGroups } from '../mock/data'
 
 export const useGroupBuyStore = defineStore('groupBuy', () => {
@@ -14,6 +14,12 @@ export const useGroupBuyStore = defineStore('groupBuy', () => {
 
   const getGroupById = (id) => {
     return groups.value.find(g => g.id === id)
+  }
+
+  const getOngoingGroupsByProductId = (productId) => {
+    return groups.value.filter(
+      g => g.productId === productId && g.status === 'ongoing'
+    )
   }
 
   const createGroup = (productId) => {
@@ -74,11 +80,19 @@ export const useGroupBuyStore = defineStore('groupBuy', () => {
       group.status = 'success'
     }
 
-    myGroups.value.unshift({
-      ...group,
-      joinedAt: new Date().toISOString(),
-      isCreator: false
-    })
+    const myGroupEntry = myGroups.value.find(mg => mg.id === group.id)
+    if (myGroupEntry) {
+      myGroupEntry.currentSize = group.currentSize
+      myGroupEntry.remainingSlots = group.remainingSlots
+      myGroupEntry.members = [...group.members]
+      myGroupEntry.status = group.status
+    } else {
+      myGroups.value.unshift({
+        ...group,
+        joinedAt: new Date().toISOString(),
+        isCreator: false
+      })
+    }
 
     return { success: true, group: group }
   }
@@ -86,14 +100,30 @@ export const useGroupBuyStore = defineStore('groupBuy', () => {
   const updateGroupStatus = () => {
     const now = new Date()
     groups.value.forEach(group => {
-      if (group.status === 'ongoing' && new Date(group.endTime) < now) {
-        group.status = 'failed'
+      if (group.status === 'ongoing') {
+        if (group.currentSize >= group.groupSize) {
+          group.status = 'success'
+        } else if (new Date(group.endTime) < now) {
+          group.status = 'failed'
+        }
       }
     })
 
     myGroups.value.forEach(group => {
-      if (group.status === 'ongoing' && new Date(group.endTime) < now) {
-        group.status = 'failed'
+      if (group.status === 'ongoing') {
+        const source = getGroupById(group.id)
+        if (source) {
+          group.currentSize = source.currentSize
+          group.remainingSlots = source.remainingSlots
+          group.members = source.members
+          group.status = source.status
+        } else {
+          if (group.currentSize >= group.groupSize) {
+            group.status = 'success'
+          } else if (new Date(group.endTime) < now) {
+            group.status = 'failed'
+          }
+        }
       }
     })
   }
@@ -105,6 +135,7 @@ export const useGroupBuyStore = defineStore('groupBuy', () => {
     currentGroup,
     getProductById,
     getGroupById,
+    getOngoingGroupsByProductId,
     createGroup,
     joinGroup,
     updateGroupStatus

@@ -8,42 +8,35 @@
       </div>
       <span class="page-title">我的拼团</span>
     </div>
-    
+
     <div class="tabs">
-      <div 
-        class="tab-item" 
-        :class="{ active: activeTab === 'all' }"
-        @click="activeTab = 'all'"
-      >
-        全部
-      </div>
-      <div 
-        class="tab-item" 
+      <div
+        class="tab-item"
         :class="{ active: activeTab === 'ongoing' }"
         @click="activeTab = 'ongoing'"
       >
-        拼团中
+        进行中
       </div>
-      <div 
-        class="tab-item" 
+      <div
+        class="tab-item"
         :class="{ active: activeTab === 'success' }"
         @click="activeTab = 'success'"
       >
-        拼团成功
+        已成团
       </div>
-      <div 
-        class="tab-item" 
+      <div
+        class="tab-item"
         :class="{ active: activeTab === 'failed' }"
         @click="activeTab = 'failed'"
       >
-        拼团失败
+        已失败
       </div>
     </div>
-    
+
     <div v-if="filteredGroups.length > 0" class="group-list">
-      <div 
-        class="group-item" 
-        v-for="group in filteredGroups" 
+      <div
+        class="group-item"
+        v-for="group in filteredGroups"
         :key="group.id"
         @click="goToGroupDetail(group.id)"
       >
@@ -51,11 +44,12 @@
           <span class="status-badge" :class="getStatusClass(group.status)">
             {{ getStatusText(group.status) }}
           </span>
-          <span class="create-time">
+          <CountdownTimer v-if="group.status === 'ongoing'" :endTime="group.endTime" />
+          <span class="create-time" v-else>
             {{ formatDate(group.joinedAt) }}
           </span>
         </div>
-        
+
         <div class="group-item-content">
           <img :src="group.product.images[0]" :alt="group.product.name" class="product-img" />
           <div class="product-info">
@@ -67,36 +61,34 @@
             <div class="group-info">
               <span>{{ group.groupSize }}人团</span>
               <span>已{{ group.currentSize }}人</span>
+              <span class="remaining-text" v-if="group.remainingSlots > 0">还差{{ group.remainingSlots }}人</span>
             </div>
           </div>
         </div>
-        
+
         <div class="group-item-footer">
           <div class="members-preview">
             <div class="avatar-list">
-              <img 
-                v-for="(member, index) in group.members.slice(0, 5)" 
+              <img
+                v-for="(member, index) in group.members.slice(0, 5)"
                 :key="member.id"
-                :src="member.avatar" 
-                :alt="member.name" 
+                :src="member.avatar"
+                :alt="member.name"
                 class="mini-avatar"
                 :style="{ zIndex: 5 - index }"
               />
             </div>
-            <span class="remaining" v-if="group.remainingSlots > 0">
-              还差{{ group.remainingSlots }}人
-            </span>
           </div>
-          
+
           <div class="footer-actions">
-            <button 
+            <button
               v-if="group.status === 'ongoing' && group.remainingSlots > 0"
               class="action-btn share-btn"
               @click.stop="handleShare(group)"
             >
               邀请好友
             </button>
-            <button 
+            <button
               v-else-if="group.status === 'success' || group.status === 'failed'"
               class="action-btn create-btn"
               @click.stop="handleCreateAgain(group)"
@@ -107,50 +99,43 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="empty-state">
       <div class="empty-icon">📋</div>
-      <div class="empty-text">暂无拼团记录</div>
+      <div class="empty-text">{{ emptyText }}</div>
       <button class="go-home-btn" @click="goHome">去逛逛</button>
     </div>
-    
-    <ActionBar 
-      :showCreateButton="false"
-      :showJoinButton="false"
-    />
-    
-    <ShareModal
-      :visible="shareModalVisible"
-      :shareUrl="shareUrl"
-      :shareTitle="shareTitle"
-      :shareDesc="shareDesc"
-      @close="shareModalVisible = false"
-    />
+
+    <div class="bottom-bar">
+      <button class="bottom-btn home-btn" @click="goHome">回到首页</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGroupBuyStore } from '../store'
-import ActionBar from '../components/ActionBar.vue'
-import ShareModal from '../components/ShareModal.vue'
+import CountdownTimer from '../components/CountdownTimer.vue'
 
 const router = useRouter()
 const store = useGroupBuyStore()
 
-const activeTab = ref('all')
-
-const shareModalVisible = ref(false)
-const shareUrl = ref('')
-const shareTitle = ref('')
-const shareDesc = ref('')
+const activeTab = ref('ongoing')
+let statusTimer = null
 
 const filteredGroups = computed(() => {
-  if (activeTab.value === 'all') {
-    return store.myGroups
-  }
+  store.updateGroupStatus()
   return store.myGroups.filter(g => g.status === activeTab.value)
+})
+
+const emptyText = computed(() => {
+  switch (activeTab.value) {
+    case 'ongoing': return '暂无进行中的拼团'
+    case 'success': return '暂无已成团的记录'
+    case 'failed': return '暂无失败的拼团'
+    default: return '暂无拼团记录'
+  }
 })
 
 const goBack = () => {
@@ -167,27 +152,19 @@ const goToGroupDetail = (groupId) => {
 
 const getStatusClass = (status) => {
   switch (status) {
-    case 'ongoing':
-      return 'status-ongoing'
-    case 'success':
-      return 'status-success'
-    case 'failed':
-      return 'status-failed'
-    default:
-      return ''
+    case 'ongoing': return 'status-ongoing'
+    case 'success': return 'status-success'
+    case 'failed': return 'status-failed'
+    default: return ''
   }
 }
 
 const getStatusText = (status) => {
   switch (status) {
-    case 'ongoing':
-      return '拼团中'
-    case 'success':
-      return '拼团成功'
-    case 'failed':
-      return '拼团失败'
-    default:
-      return ''
+    case 'ongoing': return '进行中'
+    case 'success': return '已成团'
+    case 'failed': return '已失败'
+    default: return ''
   }
 }
 
@@ -202,22 +179,26 @@ const formatDate = (dateString) => {
 }
 
 const handleShare = (group) => {
-  shareUrl.value = `${window.location.origin}/group/${group.id}`
-  shareTitle.value = `快来和我一起拼${group.product.name}！`
-  shareDesc.value = `仅需${group.product.groupPrice}元，${group.groupSize}人成团，还差${group.remainingSlots}人！`
-  shareModalVisible.value = true
+  alert(`分享链接：${window.location.origin}/group/${group.id}`)
 }
 
 const handleCreateAgain = (group) => {
   const newGroup = store.createGroup(group.productId)
   if (newGroup) {
-    shareUrl.value = `${window.location.origin}/group/${newGroup.id}`
-    shareTitle.value = `快来和我一起拼${newGroup.product.name}！`
-    shareDesc.value = `仅需${newGroup.product.groupPrice}元，${newGroup.groupSize}人成团，超值优惠！`
-    shareModalVisible.value = true
     router.push(`/group/${newGroup.id}`)
   }
 }
+
+onMounted(() => {
+  store.updateGroupStatus()
+  statusTimer = setInterval(() => {
+    store.updateGroupStatus()
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (statusTimer) clearInterval(statusTimer)
+})
 </script>
 
 <style scoped>
@@ -367,6 +348,10 @@ const handleCreateAgain = (group) => {
   color: #666;
 }
 
+.remaining-text {
+  color: #ff4d4f;
+}
+
 .group-item-footer {
   display: flex;
   justify-content: space-between;
@@ -396,11 +381,6 @@ const handleCreateAgain = (group) => {
 
 .mini-avatar:first-child {
   margin-left: 0;
-}
-
-.remaining {
-  font-size: 12px;
-  color: #ff4d4f;
 }
 
 .footer-actions {
@@ -433,6 +413,31 @@ const handleCreateAgain = (group) => {
   color: #fff;
   border-radius: 20px;
   font-size: 14px;
+  font-weight: bold;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.bottom-btn.home-btn {
+  width: 100%;
+  height: 38px;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+  color: #fff;
+  font-size: 15px;
   font-weight: bold;
 }
 </style>
