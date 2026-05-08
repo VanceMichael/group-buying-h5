@@ -120,6 +120,30 @@ export const mockGroups = [
       }
     ],
     isCreator: false
+  },
+  {
+    id: 'group_3',
+    productId: 'prod_3',
+    product: mockProducts[2],
+    groupSize: 4,
+    currentSize: 2,
+    remainingSlots: 2,
+    status: 'failed',
+    startTime: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    endTime: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    members: [
+      {
+        id: 'user_10',
+        name: '赵敏',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=young%20woman%20avatar%20portrait&image_size=square'
+      },
+      {
+        id: 'user_11',
+        name: '孙磊',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=young%20man%20avatar%20portrait&image_size=square'
+      }
+    ],
+    isCreator: false
   }
 ]
 
@@ -170,6 +194,36 @@ export const mockMyGroups = [
         id: 'user_9',
         name: '团长',
         avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=group%20leader%20avatar%20portrait&image_size=square'
+      },
+      {
+        id: 'user_1',
+        name: '我',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20user%20avatar&image_size=square'
+      }
+    ],
+    isCreator: false
+  },
+  {
+    id: 'my_group_3',
+    productId: 'prod_2',
+    product: mockProducts[1],
+    groupSize: 5,
+    currentSize: 3,
+    remainingSlots: 2,
+    status: 'failed',
+    startTime: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    endTime: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    joinedAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    members: [
+      {
+        id: 'user_12',
+        name: '周杰',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=young%20man%20avatar%20portrait&image_size=square'
+      },
+      {
+        id: 'user_13',
+        name: '吴芳',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=young%20woman%20avatar%20portrait&image_size=square'
       },
       {
         id: 'user_1',

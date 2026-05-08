@@ -70,10 +70,7 @@ const shareTitle = ref('')
 const shareDesc = ref('')
 
 const goToProductDetail = (productId) => {
-  const productGroups = groups.value.filter(g => g.productId === productId && g.status === 'ongoing')
-  if (productGroups.length > 0) {
-    router.push(`/group/${productGroups[0].id}`)
-  }
+  router.push(`/product/${productId}`)
 }
 
 const handleCreateGroup = (product) => {
@@ -87,12 +84,7 @@ const handleCreateGroup = (product) => {
 }
 
 const viewExistingGroups = (productId) => {
-  const productGroups = groups.value.filter(g => g.productId === productId && g.status === 'ongoing')
-  if (productGroups.length > 0) {
-    router.push(`/group/${productGroups[0].id}`)
-  } else {
-    alert('暂无可参与的拼团，快来发起一个吧！')
-  }
+  router.push(`/product/${productId}`)
 }
 </script>
 
