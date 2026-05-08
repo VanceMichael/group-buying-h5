@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 import GroupDetail from '../views/GroupDetail.vue'
 import MyGroups from '../views/MyGroups.vue'
 
@@ -9,6 +10,12 @@ const routes = [
     name: 'Home',
     component: Home,
     meta: { title: '拼团活动' }
+  },
+  {
+    path: '/product/:id',
+    name: 'ProductDetail',
+    component: ProductDetail,
+    meta: { title: '商品详情' }
   },
   {
     path: '/group/:id',
