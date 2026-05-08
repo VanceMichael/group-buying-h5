@@ -12,31 +12,24 @@
     <div class="tabs">
       <div 
         class="tab-item" 
-        :class="{ active: activeTab === 'all' }"
-        @click="activeTab = 'all'"
-      >
-        全部
-      </div>
-      <div 
-        class="tab-item" 
         :class="{ active: activeTab === 'ongoing' }"
         @click="activeTab = 'ongoing'"
       >
-        拼团中
+        进行中
       </div>
       <div 
         class="tab-item" 
         :class="{ active: activeTab === 'success' }"
         @click="activeTab = 'success'"
       >
-        拼团成功
+        已成团
       </div>
       <div 
         class="tab-item" 
         :class="{ active: activeTab === 'failed' }"
         @click="activeTab = 'failed'"
       >
-        拼团失败
+        已失败
       </div>
     </div>
     
@@ -139,7 +132,7 @@ import ShareModal from '../components/ShareModal.vue'
 const router = useRouter()
 const store = useGroupBuyStore()
 
-const activeTab = ref('all')
+const activeTab = ref('ongoing')
 
 const shareModalVisible = ref(false)
 const shareUrl = ref('')
@@ -147,9 +140,6 @@ const shareTitle = ref('')
 const shareDesc = ref('')
 
 const filteredGroups = computed(() => {
-  if (activeTab.value === 'all') {
-    return store.myGroups
-  }
   return store.myGroups.filter(g => g.status === activeTab.value)
 })
 
